@@ -1,0 +1,46 @@
+name: Public synthetic-only protocol checks (NOT CRM certification)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: public-synthetic-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  linux-synthetic:
+    name: Linux Python ${{ matrix.python-version }} synthetic
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Run public synthetic tests (NON-CERTIFYING)
+        run: python -S -m unittest discover -s tests -t . -v
+
+  windows-synthetic:
+    name: Windows Python 3.11 synthetic
+    runs-on: windows-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run public synthetic tests (NON-CERTIFYING)
+        run: python -S -m unittest discover -s tests -t . -v
